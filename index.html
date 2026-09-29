@@ -1,0 +1,1489 @@
+<title>Step Tracker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Manrope:wght@500;600;700;800&display=swap">
+<style>
+  :root{
+    --ground:#ffffff;
+    --surface:#F5F7F5;
+    --surface-2:#E9EDE9;
+    --line:#E1E6E0;
+    --ink:#121613;
+    --ink-muted:#586158;
+    --ink-faint:#8B948A;
+    --accent:#0F7A6B;
+    --accent-ink:#0B6B5E;
+    --accent-soft:#E4F2EE;
+    --on-accent:#FFFFFF;
+    --track:#E7ECE6;
+    --warn-bg:#FFF6E4;
+    --warn-line:#EFD79E;
+    --warn-ink:#7A4F00;
+    --error:#B42318;
+    --shadow: 0 24px 60px -24px rgba(15,40,32,0.35);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0D1512;
+      --surface:#141E19;
+      --surface-2:#1D2C25;
+      --line:#243830;
+      --ink:#EAF3EE;
+      --ink-muted:#9DB2A7;
+      --ink-faint:#698073;
+      --accent:#3FD3B7;
+      --accent-ink:#7BE7D0;
+      --accent-soft:rgba(63,211,183,0.16);
+      --on-accent:#04211B;
+      --track:#1D2C25;
+      --warn-bg:#2A2110;
+      --warn-line:#5A4A20;
+      --warn-ink:#F0CE85;
+      --error:#FF7A6B;
+      --shadow: 0 24px 60px -20px rgba(0,0,0,0.6);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0D1512;
+    --surface:#141E19;
+    --surface-2:#1D2C25;
+    --line:#243830;
+    --ink:#EAF3EE;
+    --ink-muted:#9DB2A7;
+    --ink-faint:#698073;
+    --accent:#3FD3B7;
+    --accent-ink:#7BE7D0;
+    --accent-soft:rgba(63,211,183,0.16);
+    --on-accent:#04211B;
+    --track:#1D2C25;
+    --warn-bg:#2A2110;
+    --warn-line:#5A4A20;
+    --warn-ink:#F0CE85;
+    --error:#FF7A6B;
+    --shadow: 0 24px 60px -20px rgba(0,0,0,0.6);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100%;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--accent-soft) 0%, transparent 60%),
+      var(--surface);
+    color:var(--ink);
+    font-family:'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+  }
+  h1,h2,h3{font-family:'Bricolage Grotesque','Manrope',sans-serif; margin:0;}
+  button,input{font-family:inherit;}
+  .num{font-variant-numeric:tabular-nums;}
+
+  #shell{
+    width:100%;
+    max-width:430px;
+    background:var(--ground);
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+  }
+  @media (min-width:560px){
+    body{ padding-block:32px; }
+    #shell{
+      min-height:min(860px, calc(100dvh - 64px));
+      height:min(860px, calc(100dvh - 64px));
+      margin-top:calc(env(safe-area-inset-top, 0px) * -1);
+      border-radius:36px;
+      box-shadow:var(--shadow);
+      border:1px solid var(--line);
+    }
+  }
+
+  .screen{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    padding:28px 24px calc(28px + env(safe-area-inset-bottom,0px));
+    overflow-y:auto;
+    min-height:0;
+  }
+  [hidden]{display:none!important;}
+
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);}
+  h1.title{font-size:28px;font-weight:800;letter-spacing:-0.02em;color:var(--ink);text-wrap:balance;}
+  .lead{font-size:15px;line-height:1.5;color:var(--ink-muted);}
+  .small{font-size:12px;line-height:1.5;color:var(--ink-muted);}
+  .label{font-size:13.5px;font-weight:700;color:var(--ink);}
+
+  .btn{
+    -webkit-tap-highlight-color:transparent;
+    border:none; cursor:pointer; font-weight:800; border-radius:27px;
+    transition:transform .12s ease, opacity .12s ease, background .15s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn-primary{
+    width:100%; height:54px; background:var(--accent); color:var(--on-accent); font-size:16px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-primary:hover{opacity:.92;}
+  .btn-text{
+    width:100%; height:44px; background:none; color:var(--accent-ink); font-size:15px; font-weight:700;
+  }
+  .btn-pill{
+    height:40px; padding:0 16px; border-radius:20px; border:1px solid var(--line); background:var(--ground);
+    color:var(--accent-ink); font-size:13.5px; font-weight:700;
+  }
+  .btn-chip{
+    height:38px; padding:0 14px; border-radius:12px; border:1px solid var(--line); background:var(--ground);
+    color:var(--ink); font-size:13px; font-weight:700;
+  }
+  .btn-chip.on{border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink);}
+  .btn-ghost-icon{
+    width:38px;height:38px;border-radius:19px;border:1px solid var(--line);background:var(--ground);
+    display:flex;align-items:center;justify-content:center;color:var(--ink);
+  }
+
+  .icon-badge{
+    width:120px;height:120px;border-radius:60px;background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;align-self:center;color:var(--accent);
+  }
+  .points{display:flex;flex-direction:column;gap:12px;}
+  .point{display:flex;gap:12px;align-items:flex-start;color:var(--ink);font-size:14.5px;line-height:1.5;}
+  .point svg{flex:none;margin-top:1px;color:var(--accent);}
+
+  .field{
+    height:52px;border:1px solid var(--line);border-radius:12px;padding:0 14px;
+    display:flex;align-items:center;gap:8px;background:var(--ground);
+  }
+  .field.error{border-color:var(--error);}
+  .field input{
+    flex:1; min-width:0; border:none; outline:none; background:none; font-size:17px; font-weight:700; color:var(--ink);
+  }
+  .field input::placeholder{color:var(--ink-faint); font-weight:600;}
+  .field .unit{font-size:13.5px;font-weight:700;color:var(--ink-muted); white-space:nowrap;}
+  .field-error{font-size:12px;color:var(--error);}
+  .field-row{display:flex;gap:12px;}
+  .field-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+
+  .segmented{display:flex;gap:8px;}
+  .segment{
+    flex:1;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--ground);
+    display:flex;align-items:center;justify-content:center;font-size:14.5px;font-weight:700;color:var(--ink);
+  }
+  .segment.on{border:2px solid var(--accent);background:var(--accent-soft);color:var(--accent-ink);font-weight:800;}
+
+  .spacer{flex:1;}
+
+  /* ---- app tabs shell ---- */
+  #tabbar{
+    display:flex; border-top:1px solid var(--line); padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px));
+    background:var(--ground);
+  }
+  .tab{
+    flex:1; min-height:54px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    background:none; border:none; cursor:pointer; color:var(--ink-muted);
+  }
+  .tab.on{color:var(--accent-ink); font-weight:800;}
+  .tab span{font-size:12px;font-weight:700;}
+  .tab.on span{font-weight:800;}
+
+  .page-head{display:flex;flex-direction:column;gap:2px;}
+  .page-kicker{font-size:14px;color:var(--ink-muted);}
+
+  .ring-wrap{width:230px;height:230px;align-self:center;position:relative;}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}
+  .ring-k{font-size:12.5px;font-weight:800;letter-spacing:.08em;color:var(--ink-muted);}
+  .ring-v{font-size:46px;font-weight:800;letter-spacing:-0.02em;color:var(--ink);}
+  .ring-g{font-size:14px;color:var(--ink-muted);}
+
+  .togo-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+  .togo-text{font-size:16px;font-weight:800;color:var(--ink);}
+
+  .cheer{background:var(--accent-soft);border-radius:14px;padding:12px;text-align:center;color:var(--accent-ink);font-weight:700;}
+
+  .banner{
+    background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:16px;padding:16px;
+    display:flex;gap:12px;
+  }
+  .banner-icon{
+    width:38px;height:38px;border-radius:19px;background:var(--ground);display:flex;align-items:center;justify-content:center;
+    color:var(--warn-ink); flex:none;
+  }
+  .banner-title{font-size:15.5px;font-weight:800;color:var(--ink);}
+  .banner-body{margin-top:4px;font-size:13.5px;line-height:1.45;color:var(--ink-muted);}
+  .banner-actions{display:flex;gap:6px;margin-top:10px;}
+  .banner-go{height:40px;padding:0 16px;border-radius:20px;background:var(--accent);color:var(--on-accent);font-weight:800;font-size:13.5px;border:none;}
+  .banner-later{height:40px;padding:0 12px;border-radius:20px;background:none;border:none;color:var(--ink-muted);font-weight:700;font-size:13.5px;}
+
+  .tiles{display:flex;gap:12px;}
+  .tile{flex:1;background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:5px;}
+  .tile-k{font-size:12.5px;font-weight:700;color:var(--ink-muted);}
+  .tile-v{font-size:25px;font-weight:800;letter-spacing:-0.01em;color:var(--ink);}
+  .tile-u{font-size:13px;font-weight:700;color:var(--ink-muted);}
+  .tile-s{font-size:11.5px;color:var(--ink-muted);}
+
+  .logcard{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .logcard-title{font-size:14px;font-weight:800;color:var(--ink);}
+  .chiprow{display:flex;gap:8px;flex-wrap:wrap;}
+  .customadd{display:flex;gap:8px;}
+  .customadd .field{flex:1;height:46px;}
+  .customadd .field input{font-size:15px;}
+  .addbtn{height:46px;padding:0 18px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:800;border:none;font-size:14px;}
+  .linklike{background:none;border:none;padding:0;color:var(--accent-ink);font-weight:800;font-size:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px;}
+  .linklike:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .sourcecard{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .sourcecard-title{font-size:14px;font-weight:800;color:var(--ink);}
+  #import-status{font-size:12.5px;line-height:1.5;color:var(--ink-muted);}
+  #import-status.ok{color:var(--accent-ink);font-weight:700;}
+  #import-status.bad{color:var(--error);font-weight:700;}
+  #invite-status,#invite-status-today{font-size:12.5px;line-height:1.5;color:var(--ink-muted);}
+  #invite-status{min-height:1.5em;}
+  #invite-status.ok,#invite-status-today.ok{color:var(--accent-ink);font-weight:700;}
+
+  .rows{display:flex;flex-direction:column;}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .row-k{font-weight:700;color:var(--ink);font-size:14.5px;}
+  .row-v{font-weight:800;color:var(--ink);font-size:14.5px;}
+
+  .chartcard{background:var(--surface);border-radius:16px;padding:16px 12px 12px;}
+  .chart-key{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--ink-muted);}
+  .chart-key span{display:inline-flex;align-items:center;gap:6px;}
+  .key-dot{width:9px;height:9px;border-radius:3px;background:var(--accent);display:inline-block;}
+  .key-dot.today{background:none;border:2px solid var(--accent-ink);}
+  .key-line{width:14px;height:0;border-top:2px dashed var(--accent-ink);display:inline-block;}
+  #chart-detail{min-height:16px;font-size:12.5px;color:var(--ink-muted);margin-top:2px;}
+  .bar{cursor:pointer;}
+
+  .histrow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line);}
+  .histrow:last-child{border-bottom:none;}
+  .histrow-left{display:flex;align-items:center;gap:8px;}
+  .badge-met{font-size:10.5px;font-weight:800;color:var(--accent-ink);background:var(--accent-soft);padding:3px 8px;border-radius:10px;}
+  .histrow-right{text-align:right;}
+  .histrow-steps{font-weight:800;color:var(--ink);}
+  .histrow-kcal{font-size:12px;color:var(--ink-muted);}
+
+  /* ---- modal ---- */
+  .modal-overlay{
+    position:absolute; inset:0; background:rgba(8,14,11,.45); display:flex; align-items:flex-end; z-index:20;
+  }
+  .modal-sheet{
+    width:100%; background:var(--ground); border-top-left-radius:24px; border-top-right-radius:24px;
+    padding:22px 24px calc(28px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:14px;
+  }
+  .grabber{width:38px;height:5px;border-radius:3px;background:var(--line);align-self:center;}
+  .cal-readout{text-align:center;padding:8px 0;}
+
+  ::selection{background:var(--accent-soft); color:var(--accent-ink);}
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important; animation:none!important;}
+  }
+</style>
+
+<div id="shell">
+
+  <!-- ===== ENABLE / PERMISSION SCREEN ===== -->
+  <section class="screen" id="screen-enable">
+    <div class="eyebrow">Step 1 of 2</div>
+    <div class="icon-badge">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 16.5c-1.7 0-3-1.6-3-4.2C4 9 5.3 6 7.2 6S10 8.6 10 11.3c0 2.9-1.3 5.2-3 5.2z"/>
+        <path d="M5 19.5c0-1 .9-1.8 2-1.8s2 .8 2 1.8-.9 1.5-2 1.5-2-.5-2-1.5z"/>
+        <path d="M17 12.5c1.7 0 3-1.6 3-4.2C20 5 18.7 2 16.8 2S14 4.6 14 7.3c0 2.9 1.3 5.2 3 5.2z"/>
+        <path d="M19 15.5c0-1-.9-1.8-2-1.8s-2 .8-2 1.8.9 1.5 2 1.5 2-.5 2-1.5z"/>
+      </svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <h1 class="title" style="text-align:center;">Let your browser count your steps</h1>
+      <p class="lead" style="text-align:center;">Some phones can share motion data with the browser so steps here fill in automatically. No sensor? Logging steps by hand takes a couple of taps.</p>
+    </div>
+    <div class="points">
+      <div class="point">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <span>Works right in this tab — nothing to install</span>
+      </div>
+      <div class="point">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <span>Log steps by hand any time, sensor or not</span>
+      </div>
+      <div class="point">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <span>Turn motion access off again from your browser any time</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <button class="btn btn-primary" id="btn-enable-motion">Enable motion tracking</button>
+      <button class="btn btn-text" id="btn-skip-motion">I'll log steps manually</button>
+      <p class="small" style="text-align:center;" id="enable-footnote">Your browser will ask you to confirm.</p>
+    </div>
+  </section>
+
+  <!-- ===== SETUP SCREEN ===== -->
+  <section class="screen" id="screen-setup" hidden>
+    <div class="eyebrow" id="setup-eyebrow">Step 2 of 2</div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <h1 class="title" id="setup-title">Tell us about you</h1>
+      <p class="lead">We use this to estimate the calories you burn.</p>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="label">Gender</div>
+      <div class="segmented" role="radiogroup">
+        <button type="button" class="segment on" data-gender="female">Female</button>
+        <button type="button" class="segment" data-gender="male">Male</button>
+      </div>
+    </div>
+
+    <div class="field-col">
+      <div class="label">Age</div>
+      <div class="field" id="field-age"><input id="input-age" inputmode="numeric" placeholder="e.g. 32" maxlength="3"><span class="unit">years</span></div>
+      <div class="field-error" id="error-age"></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field-col">
+        <div class="label">Height</div>
+        <div class="field" id="field-height"><input id="input-height" inputmode="numeric" placeholder="165" maxlength="3"><span class="unit">cm</span></div>
+        <div class="field-error" id="error-height"></div>
+      </div>
+      <div class="field-col">
+        <div class="label">Weight</div>
+        <div class="field" id="field-weight"><input id="input-weight" inputmode="decimal" placeholder="60" maxlength="5"><span class="unit">kg</span></div>
+        <div class="field-error" id="error-weight"></div>
+      </div>
+    </div>
+
+    <div class="field-col">
+      <div class="label">Daily step goal</div>
+      <div class="field" id="field-goal"><input id="input-goal" inputmode="numeric" maxlength="6"><span class="unit">steps</span></div>
+      <div class="field-error" id="error-goal"></div>
+      <p class="small" id="goal-suggestion">Enter your age above to see a suggested range.</p>
+      <div><button type="button" class="linklike" id="btn-use-suggested-goal" hidden>Use suggested goal</button></div>
+      <p class="small">You can change this any time.</p>
+    </div>
+
+    <div class="spacer"></div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <button class="btn btn-primary" id="btn-setup-submit">Start tracking</button>
+      <button class="btn btn-text" id="btn-setup-cancel" hidden>Cancel</button>
+      <p class="small" style="text-align:center;" id="setup-footnote">You can edit these details later in Profile.</p>
+    </div>
+  </section>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="screen-app" hidden style="display:flex;flex-direction:column;flex:1;min-height:0;">
+
+    <!-- TODAY -->
+    <section class="screen" id="tab-today">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div class="page-head">
+          <div class="page-kicker" id="today-date">—</div>
+          <h1 class="title">Today</h1>
+        </div>
+        <button type="button" class="btn-ghost-icon" id="btn-invite-today" aria-label="Invite friends" title="Invite friends">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+      <p class="small" id="invite-status-today" hidden>&nbsp;</p>
+
+      <div class="ring-wrap">
+        <svg width="230" height="230" viewBox="0 0 230 230" style="transform:rotate(-90deg)">
+          <circle cx="115" cy="115" r="100" fill="none" stroke="var(--track)" stroke-width="18"/>
+          <circle id="ring-progress" cx="115" cy="115" r="100" fill="none" stroke="var(--accent)" stroke-width="18" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-k">STEPS</div>
+          <div class="ring-v num" id="ring-steps">0</div>
+          <div class="ring-g num" id="ring-goal">of 10,000 goal</div>
+        </div>
+      </div>
+
+      <div class="togo-row">
+        <div class="togo-text num" id="togo-text">10,000 steps to go</div>
+        <button class="btn-pill" id="btn-edit-goal">Edit goal</button>
+      </div>
+
+      <div class="cheer" id="cheer-card" hidden>Goal reached. Nice work!</div>
+
+      <div class="banner" id="motion-banner" hidden>
+        <div class="banner-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="banner-title" id="banner-title">Motion tracking is off</div>
+          <div class="banner-body" id="banner-body">Turn it on so steps here count automatically, or log them by hand below.</div>
+          <div class="banner-actions">
+            <button class="banner-go" id="banner-go" hidden>Turn on</button>
+            <button class="banner-later" id="banner-later">Later</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tiles">
+        <div class="tile">
+          <div class="tile-k">Calories burned</div>
+          <div class="tile-v num"><span id="tile-kcal">–</span> <span class="tile-u">kcal</span></div>
+          <div class="tile-s">From walking (estimate)</div>
+        </div>
+        <div class="tile">
+          <div class="tile-k">Distance</div>
+          <div class="tile-v num"><span id="tile-dist">–</span> <span class="tile-u">km</span></div>
+          <div class="tile-s">From your steps</div>
+        </div>
+      </div>
+
+      <div class="logcard">
+        <div class="logcard-title">Log steps</div>
+        <div class="chiprow">
+          <button class="btn-chip" data-add="100">+100</button>
+          <button class="btn-chip" data-add="500">+500</button>
+          <button class="btn-chip" data-add="1000">+1,000</button>
+        </div>
+        <div class="customadd">
+          <div class="field"><input id="input-custom-add" inputmode="numeric" placeholder="Custom amount"></div>
+          <button class="addbtn" id="btn-custom-add">Add</button>
+        </div>
+        <p class="small">Already have a step history on your phone or a tracker app? <button type="button" class="linklike" id="link-goto-import">Import it from Profile</button>.</p>
+      </div>
+
+      <p class="small" id="resting-note">Your body also burns about 1,400 kcal a day at rest. Calories are estimates, not exact.</p>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="screen" id="tab-history" hidden>
+      <div class="page-head">
+        <div class="page-kicker">Last 7 days</div>
+        <h1 class="title">History</h1>
+      </div>
+      <div class="chartcard">
+        <svg id="chart-svg" width="100%" height="190" viewBox="0 0 330 190" role="img" aria-label="Steps per day for the last 7 days"></svg>
+        <div class="chart-key">
+          <span><i class="key-dot"></i> Goal met</span>
+          <span><i class="key-dot today"></i> Today</span>
+          <span><i class="key-line"></i> Daily goal</span>
+        </div>
+        <div id="chart-detail">Tap a bar for details.</div>
+      </div>
+      <div class="rows" id="history-rows"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="screen" id="tab-profile" hidden>
+      <div class="page-head">
+        <div class="page-kicker">Your details</div>
+        <h1 class="title">Profile</h1>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="label">Appearance</div>
+        <div class="segmented" role="radiogroup" id="theme-segmented">
+          <button type="button" class="segment" data-theme-choice="system">System</button>
+          <button type="button" class="segment" data-theme-choice="light">Light</button>
+          <button type="button" class="segment" data-theme-choice="dark">Dark</button>
+        </div>
+      </div>
+
+      <div class="rows">
+        <div class="row"><span class="row-k">Gender</span><span class="row-v" id="p-gender">—</span></div>
+        <div class="row"><span class="row-k">Age</span><span class="row-v" id="p-age">—</span></div>
+        <div class="row"><span class="row-k">Height</span><span class="row-v" id="p-height">—</span></div>
+        <div class="row"><span class="row-k">Weight</span><span class="row-v" id="p-weight">—</span></div>
+        <div class="row"><span class="row-k">Daily step goal</span><span class="row-v" id="p-goal">—</span></div>
+      </div>
+      <div><button class="btn-pill" id="btn-edit-profile">Edit details</button></div>
+
+      <div class="sourcecard" id="healthy-steps-card">
+        <div class="sourcecard-title">Healthy step guidelines</div>
+        <p class="lead">Most health bodies (like the WHO) frame activity guidance as about 150 minutes of moderate movement a week rather than a fixed step count — 10,000 steps is a popular benchmark, not an official medical target. These step ranges are commonly used general reference points:</p>
+        <div class="rows">
+          <div class="row"><span class="row-k">Sedentary</span><span class="row-v">Under 5,000</span></div>
+          <div class="row"><span class="row-k">Low active</span><span class="row-v">5,000–7,499</span></div>
+          <div class="row"><span class="row-k">Somewhat active</span><span class="row-v">7,500–9,999</span></div>
+          <div class="row"><span class="row-k">Active</span><span class="row-v">10,000–12,499</span></div>
+          <div class="row"><span class="row-k">Highly active</span><span class="row-v">12,500+</span></div>
+        </div>
+        <p class="lead" id="p-healthy-steps-personal"></p>
+        <p class="small">General information, not personalized medical advice — talk to a healthcare professional about what's right for you.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="label">Motion tracking</div>
+        <p class="lead" id="p-access-text">Off. Tap “Turn on” to allow it.</p>
+        <div id="p-access-action"><button class="btn-pill" id="btn-profile-turnon">Turn on</button></div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="label">Motion sensitivity</div>
+        <p class="lead" id="cal-summary">Using default sensitivity.</p>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <button class="btn-pill" id="btn-open-calibrate">Calibrate sensitivity</button>
+          <button type="button" class="linklike" id="btn-reset-cal" hidden>Reset to default</button>
+        </div>
+      </div>
+
+      <div class="sourcecard" id="import-card">
+        <div class="sourcecard-title">Data sources</div>
+        <p class="lead">Already tracking steps on your phone or a fitness tracker? Bring that history in here. Files are read right in your browser — nothing is uploaded anywhere.</p>
+        <div>
+          <button type="button" class="btn-pill" id="btn-import-choose">Import step data</button>
+          <input type="file" id="input-import" accept=".csv,.xml,.zip,text/csv,text/xml,application/zip" hidden>
+        </div>
+        <p class="small">Works with an Apple Health export (the .zip or its export.xml), or a CSV with a date column and a steps column — Fitbit, Google Fit, Garmin and most trackers can export one.</p>
+        <p id="import-status">No file imported yet.</p>
+      </div>
+
+      <div class="sourcecard" id="invite-card">
+        <div class="sourcecard-title">Invite friends</div>
+        <p class="lead">Know someone who'd like to track their steps too? Send them a link to start their own tracker — this only shares the link, never your steps or details.</p>
+        <div>
+          <button type="button" class="btn-pill" id="btn-invite">Invite friends</button>
+        </div>
+        <p id="invite-status">&nbsp;</p>
+      </div>
+    </section>
+
+    <nav id="tabbar">
+      <button class="tab on" data-tab="today">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Today</span>
+      </button>
+      <button class="tab" data-tab="history">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <span>History</span>
+      </button>
+      <button class="tab" data-tab="profile">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ===== GOAL SHEET MODAL ===== -->
+  <div id="overlay" class="modal-overlay" hidden>
+    <div id="sheet" class="modal-sheet">
+      <div class="grabber"></div>
+      <h1 class="title" style="font-size:21px;">Daily step goal</h1>
+      <div class="field-col">
+        <div class="label">Steps per day</div>
+        <div class="field" id="field-goal-sheet"><input id="input-goal-sheet" inputmode="numeric" maxlength="6"><span class="unit">steps</span></div>
+        <div class="field-error" id="error-goal-sheet"></div>
+        <p class="small" id="goal-sheet-suggestion"></p>
+        <div><button type="button" class="linklike" id="btn-use-suggested-goal-sheet" hidden>Use suggested goal</button></div>
+      </div>
+      <div class="chiprow">
+        <button class="btn-chip" data-preset="6000" style="flex:1;">6,000</button>
+        <button class="btn-chip" data-preset="8000" style="flex:1;">8,000</button>
+        <button class="btn-chip" data-preset="10000" style="flex:1;">10,000</button>
+        <button class="btn-chip" data-preset="12000" style="flex:1;">12,000</button>
+      </div>
+      <button class="btn btn-primary" id="btn-goal-save">Save goal</button>
+      <button class="btn btn-text" id="btn-goal-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===== CALIBRATION MODAL ===== -->
+  <div id="cal-overlay" class="modal-overlay" hidden>
+    <div class="modal-sheet">
+      <div class="grabber"></div>
+      <h1 class="title" style="font-size:21px;">Calibrate motion tracking</h1>
+      <p class="lead" id="cal-status">Tap Start, then hold your phone still and steady for a moment.</p>
+      <div class="cal-readout">
+        <div class="ring-k" id="cal-readout-label">STEPS DETECTED</div>
+        <div class="ring-v num" id="cal-count">0</div>
+      </div>
+      <button class="btn btn-primary" id="btn-cal-start">Start</button>
+      <button class="btn btn-primary" id="btn-cal-finish" hidden>Done — save calibration</button>
+      <button class="btn btn-text" id="btn-cal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var DEFAULT_GOAL = 10000, MIN_GOAL = 1000, MAX_GOAL = 50000;
+  var STORAGE_KEY = 'stepTracker.web.v1';
+
+  function loadState(){
+    var base = {
+      profile: null,
+      goal: DEFAULT_GOAL,
+      seenEnable: false,
+      access: 'not-granted',
+      history: {},
+      reminderHiddenOn: null,
+      theme: 'system',
+      motionCal: null,
+      calibratedOn: null
+    };
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return base;
+      var saved = JSON.parse(raw);
+      return Object.assign({}, base, saved);
+    }catch(e){ return base; }
+  }
+  function persist(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        profile: state.profile, goal: state.goal, seenEnable: state.seenEnable,
+        access: state.access === 'granted' ? 'granted' : 'not-granted',
+        history: state.history, reminderHiddenOn: state.reminderHiddenOn,
+        theme: state.theme, motionCal: state.motionCal, calibratedOn: state.calibratedOn
+      }));
+    }catch(e){ /* best effort */ }
+  }
+
+  var state = loadState();
+  state.tab = 'today';
+  state.editingProfile = false;
+
+  // ---------- date helpers ----------
+  function dateKey(d){
+    var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+day;
+  }
+  function todayKey(){ return dateKey(new Date()); }
+  function daysBack(n){
+    var out=[], today=new Date(); today.setHours(0,0,0,0);
+    for(var i=n-1;i>=0;i--){ var d=new Date(today); d.setDate(today.getDate()-i); out.push(d); }
+    return out;
+  }
+  function stepsOn(d){ return state.history[dateKey(d)] || 0; }
+
+  // ---------- calorie math (estimates) ----------
+  function strideM(p){ return (p.heightCm/100) * (p.gender==='male'?0.415:0.413); }
+  function distanceKm(steps,p){ return (steps*strideM(p))/1000; }
+  function walkingKcal(steps,p){ return 0.5*p.weightKg*distanceKm(steps,p); }
+  function restingKcal(p){
+    var base = 10*p.weightKg + 6.25*p.heightCm - 5*p.age;
+    return base + (p.gender==='male'?5:-161);
+  }
+  function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+
+  // ---------- healthy goal guidance ----------
+  // General, widely-cited public-health guidance on daily step counts, by age band. This is
+  // informational context to help pick a sensible starting goal — not a personalized medical
+  // recommendation, since individual health, mobility, and conditions vary.
+  function healthyGoalRange(age){
+    if(age===null || age===undefined || isNaN(age)) return null;
+    if(age < 18) return { low: 8000, high: 12000 };
+    if(age < 60) return { low: 8000, high: 10000 };
+    return { low: 6000, high: 8000 };
+  }
+  function goalSuggestionText(age){
+    var r = healthyGoalRange(age);
+    if(!r) return 'Enter your age above to see a suggested range.';
+    return 'General guidance for your age: around ' + fmt(r.low) + '–' + fmt(r.high) + ' steps/day. A starting point, not a personalized medical recommendation.';
+  }
+  function suggestedGoalValue(age){
+    var r = healthyGoalRange(age);
+    if(!r) return null;
+    return Math.round(((r.low + r.high) / 2) / 500) * 500;
+  }
+
+  function addSteps(n){
+    var k = todayKey();
+    state.history[k] = Math.max(0,(state.history[k]||0) + n);
+    persist();
+    renderToday();
+    if(state.tab==='history') renderHistory();
+  }
+
+  // ---------- import step history from a phone / tracker app export ----------
+  // Apple Health's own date strings ("2026-09-20 08:00:00 +0800") already start with
+  // our own YYYY-MM-DD key, recorded in whatever timezone the device was in at the time.
+  function appleDateToKey(s){ var m = /^(\d{4}-\d{2}-\d{2})/.exec(s); return m ? m[1] : null; }
+
+  function parseAppleHealthXML(text){
+    var re = /<Record\b[^>]*>/g;
+    var byDay = {}, found = false, m;
+    while((m = re.exec(text))){
+      var tag = m[0];
+      if(tag.indexOf('HKQuantityTypeIdentifierStepCount') === -1) continue;
+      var sd = /\bstartDate="([^"]+)"/.exec(tag);
+      var v = /\bvalue="([^"]+)"/.exec(tag);
+      if(!sd || !v) continue;
+      var day = appleDateToKey(sd[1]);
+      var n = parseFloat(v[1]);
+      if(!day || isNaN(n)) continue;
+      byDay[day] = (byDay[day] || 0) + n;
+      found = true;
+    }
+    return found ? byDay : null;
+  }
+
+  function flexibleDateKey(raw){
+    var s = (raw||'').trim().replace(/^"|"$/g,'');
+    if(!s) return null;
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if(m) return m[1]+'-'+m[2]+'-'+m[3];
+    var d = new Date(s);
+    if(!isNaN(d.getTime())) return dateKey(d);
+    return null;
+  }
+
+  function parseStepsCSV(text){
+    var lines = text.split(/\r\n|\r|\n/).filter(function(l){ return l.trim().length; });
+    if(!lines.length) return null;
+    var rows = lines.map(function(l){ return l.split(','); });
+    var header = rows[0].map(function(h){ return h.trim().toLowerCase().replace(/^"|"$/g,''); });
+    var dateIdx = header.findIndex(function(h){ return /date|day/.test(h); });
+    var stepIdx = header.findIndex(function(h){ return /step/.test(h); });
+    var startRow = 1;
+    if(dateIdx===-1 || stepIdx===-1){ dateIdx = 0; stepIdx = 1; startRow = 0; }
+    var byDay = {}, found = false;
+    for(var i=startRow;i<rows.length;i++){
+      var r = rows[i];
+      if(!r || r.length <= Math.max(dateIdx,stepIdx)) continue;
+      var day = flexibleDateKey(r[dateIdx]);
+      var n = parseFloat((r[stepIdx]||'').replace(/[^0-9.\-]/g,''));
+      if(!day || isNaN(n)) continue;
+      byDay[day] = (byDay[day] || 0) + n;
+      found = true;
+    }
+    return found ? byDay : null;
+  }
+
+  function setImportStatus(msg, kind){
+    var el = $('import-status');
+    el.textContent = msg;
+    el.className = kind || '';
+  }
+
+  function mergeImportedDays(byDay, sourceLabel){
+    var keys = Object.keys(byDay);
+    if(!keys.length){ setImportStatus('No step data found in that file.', 'bad'); return; }
+    keys.forEach(function(k){ state.history[k] = Math.round(byDay[k]); });
+    persist();
+    renderAll();
+    var from = keys.slice().sort()[0], to = keys.slice().sort()[keys.length-1];
+    setImportStatus('Imported ' + keys.length + ' day' + (keys.length===1?'':'s') + ' from ' + sourceLabel + ' (' + from + ' to ' + to + ').', 'ok');
+  }
+
+  function importFile(file){
+    setImportStatus('Reading ' + file.name + '…');
+    var name = file.name.toLowerCase();
+
+    if(name.endsWith('.zip')){
+      if(typeof JSZip === 'undefined'){
+        setImportStatus('Couldn’t load the zip reader. Unzip the export yourself and upload the export.xml file instead.', 'bad');
+        return;
+      }
+      JSZip.loadAsync(file).then(function(zip){
+        var entry = null;
+        zip.forEach(function(relPath, f){ if(!entry && /export\.xml$/i.test(relPath)) entry = f; });
+        if(!entry){ setImportStatus('Couldn’t find export.xml inside that zip.', 'bad'); return null; }
+        return entry.async('string');
+      }).then(function(text){
+        if(text == null) return;
+        var byDay = parseAppleHealthXML(text);
+        if(!byDay){ setImportStatus('No step records found in that export.', 'bad'); return; }
+        mergeImportedDays(byDay, 'Apple Health');
+      }).catch(function(){ setImportStatus('Couldn’t read that zip file.', 'bad'); });
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onerror = function(){ setImportStatus('Couldn’t read that file.', 'bad'); };
+    reader.onload = function(){
+      var text = String(reader.result || '');
+      var looksXml = name.endsWith('.xml') || text.trim().slice(0,15).indexOf('<?xml') === 0 || text.indexOf('<HealthData') !== -1;
+      if(looksXml){
+        var byDay = parseAppleHealthXML(text);
+        if(!byDay){ setImportStatus('No step records found in that file.', 'bad'); return; }
+        mergeImportedDays(byDay, 'Apple Health');
+      } else {
+        var csvDay = parseStepsCSV(text);
+        if(!csvDay){ setImportStatus('Couldn’t find a date and a steps column in that file.', 'bad'); return; }
+        mergeImportedDays(csvDay, 'your file');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- motion sensing ----------
+  // Steps are detected from the motion sensor with a lightweight band-pass-style filter: a
+  // fast EMA tracks the current signal and a slow EMA tracks the device's resting orientation,
+  // so their difference isolates the quick swing a footstep produces without being thrown off
+  // by slow tilts (pulling the phone out of a pocket, resting an arm). An adaptive amplitude
+  // estimate — how big recent steps' swings have actually been — sets the trigger threshold,
+  // and a hysteresis gate (must rise above an upper line, then fall back below a lower one
+  // before the next step can register) stops one noisy peak from counting twice. A personalized
+  // noise floor from calibration keeps ambient jitter from ever crossing the line at all.
+  var FAST_ALPHA = 0.35, SLOW_ALPHA = 0.03, AMP_ALPHA = 0.08;
+  var MIN_STEP_INTERVAL = 280;
+  var DEFAULT_MOTION_CAL = { floor: 0.18, seedAmp: 1.0 };
+
+  function motionCal(){
+    var c = state.motionCal;
+    return (c && typeof c.floor === 'number' && typeof c.seedAmp === 'number') ? c : DEFAULT_MOTION_CAL;
+  }
+  function createDetector(seedAmp){
+    return { fastEMA: null, slowEMA: null, ampEMA: seedAmp || 0, armed: true, lastStepTime: 0 };
+  }
+  // Feeds one raw acceleration-magnitude sample through the filter, calling onStep(dev) at
+  // most once per detected footstep. `det` carries the running EMA/amplitude/hysteresis state
+  // for one continuous tracking session; `floor` is the personalized minimum-noise gate.
+  function processMotionSample(mag, det, floor, onStep){
+    if(det.fastEMA === null){ det.fastEMA = mag; det.slowEMA = mag; return; }
+    det.fastEMA += FAST_ALPHA * (mag - det.fastEMA);
+    det.slowEMA += SLOW_ALPHA * (mag - det.slowEMA);
+    var dev = det.fastEMA - det.slowEMA;
+    var upper = Math.max(floor, det.ampEMA * 0.45);
+    var lower = upper * 0.45;
+    var now = Date.now();
+    if(det.armed && dev > upper){
+      det.armed = false;
+      if(now - det.lastStepTime > MIN_STEP_INTERVAL){
+        det.lastStepTime = now;
+        det.ampEMA = det.ampEMA ? det.ampEMA + AMP_ALPHA * (dev - det.ampEMA) : dev;
+        onStep(dev);
+      }
+    } else if(!det.armed && dev < lower){
+      det.armed = true;
+    }
+  }
+
+  var motionStarted = false, liveDetector = null;
+
+  function handleMotion(e){
+    var a = e.accelerationIncludingGravity || e.acceleration;
+    if(!a || a.x===null || a.x===undefined) return;
+    var mag = Math.sqrt(Math.pow(a.x||0,2)+Math.pow(a.y||0,2)+Math.pow(a.z||0,2));
+    if(!liveDetector) liveDetector = createDetector(motionCal().seedAmp);
+    processMotionSample(mag, liveDetector, motionCal().floor, function(){ addSteps(1); });
+  }
+
+  function startMotion(){
+    if(motionStarted) return;
+    motionStarted = true;
+    liveDetector = createDetector(motionCal().seedAmp);
+    window.addEventListener('devicemotion', handleMotion);
+  }
+  function stopMotion(){
+    motionStarted = false;
+    window.removeEventListener('devicemotion', handleMotion);
+  }
+  function requestMotionAccess(){
+    return new Promise(function(resolve){
+      if(typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+        DeviceMotionEvent.requestPermission().then(function(res){
+          if(res === 'granted'){ startMotion(); resolve('granted'); }
+          else resolve('not-granted');
+        }).catch(function(){ resolve('unavailable'); });
+        return;
+      }
+      if('ondevicemotion' in window){
+        var got = false;
+        var probe = function(){ got = true; };
+        window.addEventListener('devicemotion', probe, { once:true });
+        startMotion();
+        setTimeout(function(){
+          window.removeEventListener('devicemotion', probe);
+          resolve(got ? 'granted' : 'unavailable');
+        }, 1200);
+        return;
+      }
+      resolve('unavailable');
+    });
+  }
+
+  // ---------- element refs ----------
+  var $ = function(id){ return document.getElementById(id); };
+  var screenEnable = $('screen-enable'), screenSetup = $('screen-setup'), screenApp = $('screen-app');
+
+  function showScreen(name){
+    screenEnable.hidden = name !== 'enable';
+    screenSetup.hidden = name !== 'setup';
+    screenApp.hidden = name !== 'app';
+  }
+
+  // ---------- appearance ----------
+  function applyTheme(){
+    if(state.theme === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    else if(state.theme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    else document.documentElement.removeAttribute('data-theme');
+  }
+  function renderThemeSegments(){
+    document.querySelectorAll('#theme-segmented .segment').forEach(function(b){
+      b.classList.toggle('on', b.getAttribute('data-theme-choice') === state.theme);
+    });
+  }
+  document.querySelectorAll('#theme-segmented .segment').forEach(function(b){
+    b.addEventListener('click', function(){
+      state.theme = b.getAttribute('data-theme-choice');
+      persist();
+      applyTheme();
+      renderThemeSegments();
+    });
+  });
+  applyTheme();
+  renderThemeSegments();
+
+  // ---------- ENABLE screen ----------
+  (function(){
+    var isIOSPermission = typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function';
+    $('enable-footnote').textContent = isIOSPermission
+      ? 'Your browser will ask you to confirm.'
+      : ('ondevicemotion' in window ? 'We\'ll check whether your device shares motion data.' : 'Steps you log yourself always count, sensor or not.');
+
+    $('btn-enable-motion').addEventListener('click', function(){
+      this.disabled = true;
+      var label = this.textContent;
+      this.textContent = 'Checking…';
+      var self = this;
+      requestMotionAccess().then(function(result){
+        state.access = result;
+        state.seenEnable = true;
+        persist();
+        self.disabled = false; self.textContent = label;
+        showScreen('setup');
+      });
+    });
+    $('btn-skip-motion').addEventListener('click', function(){
+      state.access = 'not-granted';
+      state.seenEnable = true;
+      persist();
+      showScreen('setup');
+    });
+  })();
+
+  // ---------- SETUP screen ----------
+  var gender = 'female';
+  function setupSegments(){
+    var segs = screenSetup.querySelectorAll('.segment');
+    segs.forEach(function(s){
+      var on = s.getAttribute('data-gender') === gender;
+      s.classList.toggle('on', on);
+    });
+  }
+  screenSetup.querySelectorAll('.segment').forEach(function(s){
+    s.addEventListener('click', function(){ gender = s.getAttribute('data-gender'); setupSegments(); });
+  });
+
+  function sanitizeNumberInput(el, decimal){
+    el.addEventListener('input', function(){
+      var re = decimal ? /[^0-9.]/g : /[^0-9]/g;
+      var v = el.value.replace(re,'');
+      el.value = v;
+      el.closest('.field').classList.remove('error');
+    });
+  }
+  sanitizeNumberInput($('input-age'), false);
+  sanitizeNumberInput($('input-height'), false);
+  sanitizeNumberInput($('input-weight'), true);
+  sanitizeNumberInput($('input-goal'), false);
+
+  function inRange(v, min, max){
+    var n = parseFloat(v);
+    return (!isNaN(n) && n>=min && n<=max) ? n : null;
+  }
+
+  function refreshGoalSuggestion(){
+    var age = inRange($('input-age').value, 13, 100);
+    $('goal-suggestion').textContent = goalSuggestionText(age);
+    $('btn-use-suggested-goal').hidden = (age === null);
+  }
+  $('input-age').addEventListener('input', refreshGoalSuggestion);
+  $('btn-use-suggested-goal').addEventListener('click', function(){
+    var age = inRange($('input-age').value, 13, 100);
+    var g = suggestedGoalValue(age);
+    if(g !== null){
+      $('input-goal').value = String(g);
+      $('field-goal').classList.remove('error');
+      $('error-goal').textContent = '';
+    }
+  });
+
+  function openSetup(editing){
+    state.editingProfile = !!editing;
+    var p = state.profile;
+    gender = p ? p.gender : 'female';
+    setupSegments();
+    $('input-age').value = p ? String(p.age) : '';
+    $('input-height').value = p ? String(p.heightCm) : '';
+    $('input-weight').value = p ? String(p.weightKg) : '';
+    $('input-goal').value = String(state.goal);
+    ['age','height','weight','goal'].forEach(function(k){ $('error-'+k).textContent=''; $('field-'+k).classList.remove('error'); });
+    refreshGoalSuggestion();
+
+    $('setup-eyebrow').textContent = editing ? 'Profile' : 'Step 2 of 2';
+    $('setup-title').textContent = editing ? 'Edit your details' : 'Tell us about you';
+    $('btn-setup-submit').textContent = editing ? 'Save' : 'Start tracking';
+    $('btn-setup-cancel').hidden = !editing;
+    $('setup-footnote').hidden = editing;
+    showScreen('setup');
+  }
+
+  $('btn-setup-cancel').addEventListener('click', function(){ showScreen('app'); });
+
+  $('btn-setup-submit').addEventListener('click', function(){
+    var a = inRange($('input-age').value, 13, 100);
+    var h = inRange($('input-height').value, 100, 230);
+    var w = inRange($('input-weight').value, 30, 250);
+    var g = inRange($('input-goal').value, MIN_GOAL, MAX_GOAL);
+    var ok = true;
+    function setErr(key, msg, valid){
+      $('error-'+key).textContent = valid ? '' : msg;
+      $('field-'+key).classList.toggle('error', !valid);
+      if(!valid) ok = false;
+    }
+    setErr('age', 'Enter an age from 13 to 100.', a!==null);
+    setErr('height', 'Enter 100 to 230 cm.', h!==null);
+    setErr('weight', 'Enter 30 to 250 kg.', w!==null);
+    setErr('goal', 'Enter 1,000 to 50,000 steps.', g!==null);
+    if(!ok) return;
+
+    state.profile = { gender: gender, age: Math.round(a), heightCm: Math.round(h), weightKg: Math.round(w*10)/10 };
+    state.goal = Math.round(g);
+    state.editingProfile = false;
+    persist();
+    showScreen('app');
+    renderAll();
+  });
+
+  // ---------- TAB BAR ----------
+  document.querySelectorAll('.tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var name = btn.getAttribute('data-tab');
+      state.tab = name;
+      document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('on', b===btn); });
+      ['today','history','profile'].forEach(function(t){ $('tab-'+t).hidden = (t!==name); });
+      if(name==='history') renderHistory();
+      if(name==='profile') renderProfile();
+    });
+  });
+
+  // ---------- TODAY ----------
+  var RING_R = 100, RING_C = 2*Math.PI*RING_R;
+  $('ring-progress').style.strokeDasharray = RING_C+' '+RING_C;
+
+  function reminderCopy(access){
+    if(access === 'unavailable') return {
+      title: 'Motion tracking isn’t available',
+      body: 'This browser or device can’t share motion data. Log your steps by hand below — it still counts.',
+      button: null
+    };
+    return {
+      title: 'Motion tracking is off',
+      body: 'Turn it on so steps here count automatically, or log them by hand below.',
+      button: 'Turn on'
+    };
+  }
+
+  function renderToday(){
+    var p = state.profile; if(!p) return;
+    var on = state.access === 'granted';
+    var steps = stepsOn(new Date());
+    var goal = state.goal;
+    var left = Math.max(goal - steps, 0);
+    var frac = Math.min(steps/goal, 1);
+
+    $('today-date').textContent = new Intl.DateTimeFormat('en-GB', { weekday:'long', day:'numeric', month:'short' }).format(new Date());
+    $('ring-progress').style.strokeDashoffset = String(RING_C * (1-frac));
+    $('ring-steps').textContent = fmt(steps);
+    $('ring-goal').textContent = 'of ' + fmt(goal) + ' goal';
+    $('togo-text').textContent = left>0 ? (fmt(left)+' steps to go') : 'Goal reached';
+    $('cheer-card').hidden = !(left===0);
+
+    var hideBanner = on || (state.reminderHiddenOn === todayKey());
+    $('motion-banner').hidden = hideBanner;
+    if(!hideBanner){
+      var r = reminderCopy(state.access);
+      $('banner-title').textContent = r.title;
+      $('banner-body').textContent = r.body;
+      $('banner-go').hidden = !r.button;
+      if(r.button) $('banner-go').textContent = r.button;
+    }
+
+    $('tile-kcal').textContent = fmt(walkingKcal(steps, p));
+    $('tile-dist').textContent = distanceKm(steps, p).toFixed(1);
+    $('resting-note').textContent = 'Your body also burns about ' + fmt(restingKcal(p)) + ' kcal a day at rest. Calories are estimates, not exact.';
+  }
+
+  $('btn-edit-goal').addEventListener('click', openGoalSheet);
+  $('banner-go').addEventListener('click', function(){
+    requestMotionAccess().then(function(result){
+      state.access = result; persist(); renderToday(); renderProfile();
+    });
+  });
+  $('banner-later').addEventListener('click', function(){
+    state.reminderHiddenOn = todayKey(); persist(); renderToday();
+  });
+
+  document.querySelectorAll('[data-add]').forEach(function(btn){
+    btn.addEventListener('click', function(){ addSteps(parseInt(btn.getAttribute('data-add'),10)); });
+  });
+  $('btn-custom-add').addEventListener('click', function(){
+    var el = $('input-custom-add');
+    var n = parseInt(el.value, 10);
+    if(!isNaN(n) && n>0){ addSteps(n); el.value=''; }
+  });
+  $('input-custom-add').addEventListener('input', function(){
+    this.value = this.value.replace(/[^0-9]/g,'');
+  });
+  $('input-custom-add').addEventListener('keydown', function(e){
+    if(e.key==='Enter'){ $('btn-custom-add').click(); }
+  });
+
+  // ---------- HISTORY ----------
+  function renderHistory(){
+    var p = state.profile; if(!p) return;
+    var days = daysBack(7).map(function(d){ return { date:d, steps: stepsOn(d) }; });
+    var goal = state.goal;
+    var W=330,H=190,PAD_L=34,PAD_B=24,PAD_T=12;
+    var cw = W-PAD_L-6, ch = H-PAD_B-PAD_T;
+    var maxVal = Math.max(goal, Math.max.apply(null, days.map(function(d){return d.steps;}))) * 1.1;
+    var top = Math.max(5000, Math.ceil(maxVal/5000)*5000);
+    function y(v){ return PAD_T + ch - (v/top)*ch; }
+    var slot = cw/days.length, bw = slot*0.56;
+    var ticks = []; for(var t=0;t<=top;t+=5000) ticks.push(t);
+    function isToday(d){ return dateKey(d)===todayKey(); }
+
+    var svg = $('chart-svg');
+    var parts = [];
+    ticks.forEach(function(t){
+      parts.push('<line x1="'+PAD_L+'" x2="'+(W-6)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="var(--line)" stroke-width="1"/>');
+      parts.push('<text x="'+(PAD_L-6)+'" y="'+(y(t)+4)+'" font-size="11" fill="var(--ink-muted)" text-anchor="end">'+(t/1000)+'k</text>');
+    });
+    days.forEach(function(d,i){
+      var x = PAD_L + i*slot + (slot-bw)/2;
+      var h = d.steps>0 ? Math.max((d.steps/top)*ch, 2) : 0;
+      var hit = d.steps >= goal;
+      var today = isToday(d.date);
+      var fill = hit ? 'var(--accent)' : (today ? 'var(--accent-ink)' : 'var(--ink-faint)');
+      var opacity = (hit||today) ? 1 : 0.5;
+      parts.push('<rect class="bar" data-idx="'+i+'" x="'+x+'" y="'+(PAD_T+ch-h)+'" width="'+bw+'" height="'+Math.max(h,1)+'" rx="4" fill="'+fill+'" opacity="'+opacity+'"/>');
+      if(today){
+        parts.push('<rect x="'+(x-2)+'" y="'+(PAD_T+ch-h-2)+'" width="'+(bw+4)+'" height="'+(Math.max(h,1)+4)+'" rx="6" fill="none" stroke="var(--accent-ink)" stroke-width="1.5" opacity="0.5"/>');
+      }
+      parts.push('<text x="'+(x+bw/2)+'" y="'+(H-6)+'" font-size="11" fill="var(--ink-muted)" text-anchor="middle">'+(today?'Today':new Intl.DateTimeFormat('en-GB',{weekday:'short'}).format(d.date))+'</text>');
+    });
+    parts.push('<line x1="'+PAD_L+'" x2="'+(W-6)+'" y1="'+y(goal)+'" y2="'+y(goal)+'" stroke="var(--accent-ink)" stroke-width="1.5" stroke-dasharray="4 4"/>');
+    svg.innerHTML = parts.join('');
+
+    svg.querySelectorAll('.bar').forEach(function(rect){
+      rect.addEventListener('click', function(){
+        var i = parseInt(rect.getAttribute('data-idx'),10);
+        var d = days[i];
+        var label = isToday(d.date) ? 'Today' : new Intl.DateTimeFormat('en-GB',{weekday:'long', day:'numeric', month:'short'}).format(d.date);
+        $('chart-detail').textContent = label+': '+fmt(d.steps)+' steps · '+fmt(walkingKcal(d.steps,p))+' kcal';
+      });
+    });
+
+    var rowsHtml = days.slice().reverse().map(function(d){
+      var hit = d.steps >= goal;
+      var label = isToday(d.date) ? 'Today' : new Intl.DateTimeFormat('en-GB',{weekday:'short', day:'numeric', month:'short'}).format(d.date);
+      return '<div class="histrow">'
+        + '<div class="histrow-left"><span class="row-k">'+label+'</span>'+(hit?'<span class="badge-met">Goal met</span>':'')+'</div>'
+        + '<div class="histrow-right"><div class="histrow-steps num">'+fmt(d.steps)+'</div><div class="histrow-kcal num">'+fmt(walkingKcal(d.steps,p))+' kcal</div></div>'
+        + '</div>';
+    }).join('');
+    $('history-rows').innerHTML = rowsHtml;
+  }
+
+  // ---------- PROFILE ----------
+  var accessCopy = {
+    'granted': 'On. Steps here count automatically.',
+    'not-granted': 'Off. Tap “Turn on” to allow it.',
+    'unavailable': 'Not available in this browser.'
+  };
+  function renderProfile(){
+    var p = state.profile; if(!p) return;
+    $('p-gender').textContent = p.gender==='male' ? 'Male' : 'Female';
+    $('p-age').textContent = p.age+' years';
+    $('p-height').textContent = p.heightCm+' cm';
+    $('p-weight').textContent = p.weightKg+' kg';
+    $('p-goal').textContent = fmt(state.goal)+' steps';
+    $('p-access-text').textContent = accessCopy[state.access] || accessCopy['not-granted'];
+    $('p-access-action').hidden = state.access === 'granted';
+    $('btn-profile-turnon').textContent = 'Turn on';
+    $('p-healthy-steps-personal').textContent = goalSuggestionText(p.age);
+    renderCalSummary();
+  }
+
+  function renderCalSummary(){
+    if(state.motionCal){
+      $('cal-summary').textContent = 'Calibrated' + (state.calibratedOn ? (' on ' + state.calibratedOn) : '') + ' — using your personalized sensitivity.';
+    } else {
+      $('cal-summary').textContent = 'Using default sensitivity. Calibrating can improve accuracy for your device and how you carry your phone.';
+    }
+    $('btn-reset-cal').hidden = !state.motionCal;
+  }
+  $('btn-edit-profile').addEventListener('click', function(){ openSetup(true); });
+  $('btn-profile-turnon').addEventListener('click', function(){
+    requestMotionAccess().then(function(result){
+      state.access = result; persist(); renderProfile(); renderToday();
+    });
+  });
+
+  // ---------- INVITE FRIENDS ----------
+  // No accounts, no server: "inviting" just means sharing a link to this same app so a
+  // friend can open it and start their own separate, local tracker. Uses the native share
+  // sheet where available (mobile browsers), and falls back to copying a message to the
+  // clipboard everywhere else. Shared by the icon button on Today and the card on Profile.
+  function setInviteFeedback(el, msg, ok){
+    if(!el) return;
+    el.hidden = false;
+    el.textContent = msg;
+    el.classList.toggle('ok', !!ok);
+    if(el.__inviteTimer) clearTimeout(el.__inviteTimer);
+    el.__inviteTimer = setTimeout(function(){
+      el.classList.remove('ok');
+      if(el.id === 'invite-status-today'){ el.hidden = true; }
+      else { el.textContent = ' '; }
+    }, 6000);
+  }
+  function triggerInvite(statusEl){
+    var url = window.location.href.split('#')[0];
+    var text = 'I’m tracking my steps with Step Tracker — join me!';
+    if(navigator.share){
+      navigator.share({ title: 'Step Tracker', text: text, url: url }).catch(function(){ /* user cancelled — nothing to do */ });
+      return;
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text + ' ' + url).then(function(){
+        setInviteFeedback(statusEl, 'Link copied — paste it anywhere to invite them.', true);
+      }).catch(function(){
+        setInviteFeedback(statusEl, 'Copy this link to invite them: ' + url, false);
+      });
+      return;
+    }
+    setInviteFeedback(statusEl, 'Copy this link to invite them: ' + url, false);
+  }
+  $('btn-invite').addEventListener('click', function(){ triggerInvite($('invite-status')); });
+  $('btn-invite-today').addEventListener('click', function(){ triggerInvite($('invite-status-today')); });
+
+  $('btn-import-choose').addEventListener('click', function(){ $('input-import').click(); });
+  $('input-import').addEventListener('change', function(){
+    var file = this.files && this.files[0];
+    if(file) importFile(file);
+    this.value = '';
+  });
+  $('link-goto-import').addEventListener('click', function(){
+    document.querySelector('.tab[data-tab="profile"]').click();
+    $('import-card').scrollIntoView({ behavior:'smooth', block:'center' });
+  });
+
+  $('btn-reset-cal').addEventListener('click', function(){
+    state.motionCal = null;
+    state.calibratedOn = null;
+    persist();
+    liveDetector = null;
+    renderCalSummary();
+  });
+
+  // ---------- CALIBRATION MODAL ----------
+  // Two phases: first hold the phone still for a moment so we can measure THIS device's own
+  // sensor noise (every phone/hand jitters a little differently), which sets a personalized
+  // noise floor; then walk ~20 steps so we can see how big a real step's swing looks against
+  // that floor, which seeds the adaptive amplitude estimate used for live tracking.
+  var HOLD_MS = 2500;
+  var CAL = { phase:'idle', det:null, holdSamples:[], holdTimer:null, floor:null, peaks:[], lastPeakTime:0, armed:true, listener:null };
+
+  function calHoldHandler(e){
+    var a = e.accelerationIncludingGravity || e.acceleration;
+    if(!a || a.x===null || a.x===undefined) return;
+    var mag = Math.sqrt(Math.pow(a.x||0,2)+Math.pow(a.y||0,2)+Math.pow(a.z||0,2));
+    if(!CAL.det) CAL.det = { fastEMA: mag, slowEMA: mag };
+    CAL.det.fastEMA += FAST_ALPHA * (mag - CAL.det.fastEMA);
+    CAL.det.slowEMA += SLOW_ALPHA * (mag - CAL.det.slowEMA);
+    CAL.holdSamples.push(Math.abs(CAL.det.fastEMA - CAL.det.slowEMA));
+  }
+  function calWalkHandler(e){
+    var a = e.accelerationIncludingGravity || e.acceleration;
+    if(!a || a.x===null || a.x===undefined) return;
+    var mag = Math.sqrt(Math.pow(a.x||0,2)+Math.pow(a.y||0,2)+Math.pow(a.z||0,2));
+    CAL.det.fastEMA += FAST_ALPHA * (mag - CAL.det.fastEMA);
+    CAL.det.slowEMA += SLOW_ALPHA * (mag - CAL.det.slowEMA);
+    var dev = CAL.det.fastEMA - CAL.det.slowEMA;
+    var lower = CAL.floor * 1.3;
+    var now = Date.now();
+    if(CAL.armed && dev > CAL.floor){
+      CAL.armed = false;
+      if(now - CAL.lastPeakTime > MIN_STEP_INTERVAL){
+        CAL.lastPeakTime = now;
+        CAL.peaks.push(dev);
+        $('cal-count').textContent = String(CAL.peaks.length);
+      }
+    } else if(!CAL.armed && dev < lower){
+      CAL.armed = true;
+    }
+  }
+  function stopCalibrationListener(){
+    if(CAL.listener){ window.removeEventListener('devicemotion', CAL.listener); CAL.listener = null; }
+    if(CAL.holdTimer){ clearTimeout(CAL.holdTimer); CAL.holdTimer = null; }
+    if(CAL.countdownTimer){ clearInterval(CAL.countdownTimer); CAL.countdownTimer = null; }
+  }
+
+  function openCalibrateSheet(access){
+    CAL.phase = 'idle'; CAL.det = null; CAL.holdSamples = []; CAL.floor = null;
+    CAL.peaks = []; CAL.armed = true; CAL.lastPeakTime = 0;
+    $('cal-overlay').hidden = false;
+    $('cal-readout-label').textContent = 'STEPS DETECTED';
+    $('cal-count').textContent = '0';
+    if(access !== 'granted'){
+      $('cal-status').textContent = 'Motion tracking isn’t available, so sensitivity can’t be calibrated on this device.';
+      $('btn-cal-start').hidden = true;
+      $('btn-cal-finish').hidden = true;
+      return;
+    }
+    $('cal-status').textContent = 'Tap Start, then hold your phone still and steady for a moment.';
+    $('btn-cal-start').hidden = false;
+    $('btn-cal-start').disabled = false;
+    $('btn-cal-start').textContent = 'Start';
+    $('btn-cal-finish').hidden = true;
+  }
+  function closeCalibrateSheet(){
+    stopCalibrationListener();
+    $('cal-overlay').hidden = true;
+  }
+
+  $('btn-open-calibrate').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    requestMotionAccess().then(function(result){
+      btn.disabled = false;
+      state.access = result;
+      persist();
+      renderProfile();
+      renderToday();
+      openCalibrateSheet(result);
+    });
+  });
+
+  function finishHoldPhase(){
+    var samples = CAL.holdSamples;
+    if(samples.length < 5){
+      // Too few samples to trust (e.g. the listener barely ran) — fall back to a safe default.
+      CAL.floor = DEFAULT_MOTION_CAL.floor;
+    } else {
+      var sorted = samples.slice().sort(function(a,b){ return a-b; });
+      var p90 = sorted[Math.floor(sorted.length*0.9)];
+      CAL.floor = Math.min(0.9, Math.max(0.08, p90*1.8));
+    }
+    CAL.phase = 'walking';
+    CAL.peaks = []; CAL.armed = true; CAL.lastPeakTime = 0;
+    $('cal-readout-label').textContent = 'STEPS DETECTED';
+    $('cal-count').textContent = '0';
+    $('cal-status').textContent = 'Now walk about 20 steps at a normal pace, then tap Done.';
+    $('btn-cal-finish').hidden = false;
+    CAL.listener = calWalkHandler;
+    window.addEventListener('devicemotion', CAL.listener);
+  }
+
+  $('btn-cal-start').addEventListener('click', function(){
+    CAL.phase = 'holding';
+    CAL.det = null;
+    CAL.holdSamples = [];
+    $('cal-status').textContent = 'Hold still… measuring your device’s sensor noise.';
+    $('btn-cal-start').hidden = true;
+    stopCalibrationListener();
+    CAL.listener = calHoldHandler;
+    window.addEventListener('devicemotion', CAL.listener);
+    $('cal-readout-label').textContent = 'HOLD STILL';
+    var holdStart = Date.now();
+    $('cal-count').textContent = Math.ceil(HOLD_MS/1000);
+    CAL.countdownTimer = setInterval(function(){
+      var remaining = Math.max(0, HOLD_MS - (Date.now() - holdStart));
+      $('cal-count').textContent = String(Math.ceil(remaining/1000));
+    }, 100);
+    CAL.holdTimer = setTimeout(function(){
+      clearInterval(CAL.countdownTimer);
+      window.removeEventListener('devicemotion', CAL.listener);
+      CAL.listener = null;
+      finishHoldPhase();
+    }, HOLD_MS);
+  });
+
+  $('btn-cal-finish').addEventListener('click', function(){
+    stopCalibrationListener();
+    var n = CAL.peaks.length;
+    if(n < 8){
+      $('cal-status').textContent = 'Only picked up ' + n + ' step' + (n===1?'':'s') + ' — not enough to calibrate. Sensitivity is unchanged.';
+      $('btn-cal-finish').hidden = true;
+      $('btn-cal-start').hidden = false;
+      $('btn-cal-start').textContent = 'Try again';
+      return;
+    }
+    var sorted = CAL.peaks.slice().sort(function(a,b){ return a-b; });
+    var median = sorted[Math.floor(sorted.length/2)];
+    state.motionCal = { floor: CAL.floor, seedAmp: median };
+    state.calibratedOn = todayKey();
+    persist();
+    liveDetector = null; // re-seed live tracking with the new calibration next time it starts
+    renderCalSummary();
+    $('cal-status').textContent = 'Calibrated from ' + n + ' steps. Sensitivity adjusted.';
+    $('btn-cal-finish').hidden = true;
+  });
+
+  $('btn-cal-cancel').addEventListener('click', closeCalibrateSheet);
+  $('cal-overlay').addEventListener('click', function(e){ if(e.target === $('cal-overlay')) closeCalibrateSheet(); });
+
+  // ---------- GOAL SHEET ----------
+  function openGoalSheet(){
+    $('input-goal-sheet').value = String(state.goal);
+    $('error-goal-sheet').textContent = '';
+    $('field-goal-sheet').classList.remove('error');
+    var age = state.profile ? state.profile.age : null;
+    $('goal-sheet-suggestion').textContent = goalSuggestionText(age);
+    $('btn-use-suggested-goal-sheet').hidden = (suggestedGoalValue(age) === null);
+    $('overlay').hidden = false;
+  }
+  function closeGoalSheet(){ $('overlay').hidden = true; }
+  $('overlay').addEventListener('click', function(e){ if(e.target === $('overlay')) closeGoalSheet(); });
+  $('btn-goal-cancel').addEventListener('click', closeGoalSheet);
+  sanitizeNumberInput($('input-goal-sheet'), false);
+  document.querySelectorAll('[data-preset]').forEach(function(btn){
+    btn.addEventListener('click', function(){ $('input-goal-sheet').value = btn.getAttribute('data-preset'); });
+  });
+  $('btn-use-suggested-goal-sheet').addEventListener('click', function(){
+    var age = state.profile ? state.profile.age : null;
+    var g = suggestedGoalValue(age);
+    if(g !== null){
+      $('input-goal-sheet').value = String(g);
+      $('field-goal-sheet').classList.remove('error');
+      $('error-goal-sheet').textContent = '';
+    }
+  });
+  $('btn-goal-save').addEventListener('click', function(){
+    var g = inRange($('input-goal-sheet').value, MIN_GOAL, MAX_GOAL);
+    if(g===null){
+      $('error-goal-sheet').textContent = 'Enter 1,000 to 50,000 steps.';
+      $('field-goal-sheet').classList.add('error');
+      return;
+    }
+    state.goal = Math.round(g);
+    persist();
+    closeGoalSheet();
+    renderAll();
+  });
+
+  // ---------- boot ----------
+  function renderAll(){ renderToday(); if(state.tab==='history') renderHistory(); renderProfile(); }
+
+  function boot(){
+    if(state.profile){
+      showScreen('app');
+      renderAll();
+      if(state.access === 'granted') startMotion();
+    } else if(state.seenEnable){
+      openSetup(false);
+    } else {
+      showScreen('enable');
+    }
+  }
+  boot();
+})();
+</script>
